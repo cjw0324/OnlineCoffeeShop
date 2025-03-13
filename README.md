@@ -1,6 +1,41 @@
-# Online Coffee Shop
+# CODE-Brew: 카페 메뉴 관리 서비스
 커피 메뉴 관리 및 사용자의 상품 주문에 따른 주문 상태 관리
 
+
+## 📋 프로젝트 소개
+
+CODE-Brew는 프로그래머스 백엔드 데브코스 1차 프로젝트로 개발된 카페 메뉴 관리 서비스입니다. 
+"예외 처리 반"이라는 팀명처럼 예외 상황을 철저히 관리하고 처리하는 안정적인 백엔드 시스템 구축에 중점을 두었습니다.
+
+### 🎯 주요 기능
+
+- **사용자**
+  - 회원가입 및 이메일 인증
+  - 상품 검색 및 필터링
+  - 장바구니 관리
+  - 주문 및 결제(PortOne API 연동)
+  - 주문 취소 및 환불
+  - 상품 리뷰 작성
+
+- **관리자**
+  - 상품 등록/수정/삭제
+  - 주문 상태 관리
+  - 배송 상태 관리
+
+## 🛠️ 기술 스택
+
+### 백엔드
+- **Language & Framework**: Java 21, Spring Boot 3
+- **Database**: MySQL 8.0
+- **ORM**: JPA/Hibernate
+- **Security**: Spring Security, JWT
+- **Payment**: PortOne API
+- **Build Tool**: Gradle
+- **API Documentation**: Swagger
+- **Test**: JUnit5, Mockito
+
+### 프론트엔드
+- **Framework**: Next.js
 
 
 ## 프로젝트 기간
@@ -8,6 +43,68 @@
 
 ## 구성원
 [장무영](https://github.com/wkdan), [신동훈](https://github.com/SDHSeoulTech), [신윤호](https://github.com/messiteacher), [최재우](https://github.com/cjw0324)
+
+## 🔍 핵심 비즈니스 로직
+
+### 1. 사용자 인증 및 권한 관리
+
+Spring Security와 JWT를 활용한 인증 시스템을 구현했습니다. 특히 관리자 권한과 일반 사용자 권한을 AOP를 통해 효율적으로 관리했습니다.
+
+```java
+@Aspect
+@Component
+public class CheckPermissionAspect {
+    @Pointcut("@annotation(com.example.cafe.global.annotation.CheckPermission)")
+    public void checkPermissionPointcut() {}
+    
+    @Before("checkPermissionPointcut()")
+    public void before(JoinPoint joinPoint) {
+        // 권한 검증 로직
+        // ...
+    }
+}
+```
+
+### 2. 동시성 문제 해결
+재고 관리 시 발생할 수 있는 동시성 이슈를 다양한 방식으로 테스트하고 최적의 솔루션을 적용했습니다.
+
+#### 테스트한 접근 방식:
+1. **Redis Distributed Lock**
+2. **JPA의 비관적 락(Pessimistic Lock)**
+3. **원자적 업데이트 쿼리(Atomic Update Query)**
+
+성능 테스트 결과, 원자적 업데이트 쿼리 방식이 가장 효율적인 것으로 나타났습니다.
+
+```java
+@Modifying
+@Query("update Item i set i.stock = i.stock - :quantity where i.id = :itemId and i.stock >= :quantity")
+int decreaseStock(@Param("itemId") Long itemId, @Param("quantity") int quantity);
+```
+### 3. 배송 상태 자동화
+
+Spring Scheduler를 활용하여 배송 상태 업데이트를 자동화했습니다.
+
+```java
+@Scheduled(cron = "0 0 14 * * *")
+public void updateStatusToBeforeDelivery() {
+    List<Trade> prepareDeliveryTrades = tradeRepository.findByTradeStatus(TradeStatus.PREPARE_DELIVERY);
+    for (Trade prepareDeliveryTrade : prepareDeliveryTrades) {
+        log.info("trade 상태변경 : {}", prepareDeliveryTrade.getTradeUUID());
+        prepareDeliveryTrade.setTradeStatus(TradeStatus.BEFORE_DELIVERY);
+    }
+}
+```
+
+### 4. 결제 시스템 연동
+
+PortOne API를 활용하여 결제 시스템을 구현했습니다. WebHook을 통한 결제 검증 로직으로 안전한 결제 프로세스를 구현했습니다.
+
+
+## 🧪 테스트 전략
+
+- **단위 테스트**: 핵심 비즈니스 로직에 대한 테스트 코드 작성
+- **통합 테스트**: API 엔드포인트 테스트
+- **부하 테스트**: Apache AB를 활용한 동시성 테스트
 
 ## 컨벤션
 [🔗 컨벤션 Wiki 바로가기](https://github.com/prgrms-be-devcourse/NBE4-5-1-Team09/wiki/%EC%BB%A8%EB%B2%A4%EC%85%98)
