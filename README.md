@@ -42,7 +42,11 @@ CODE-Brew는 프로그래머스 백엔드 데브코스 1차 프로젝트로 개�
 2025/02/19 12:00 ~ 2025/02/27 12:00
 
 ## 구성원
-[장무영](https://github.com/wkdan), [신동훈](https://github.com/SDHSeoulTech), [신윤호](https://github.com/messiteacher), [최재우](https://github.com/cjw0324)
+[최재우](https://github.com/cjw0324) : 상품 주문 / 결제 
+[장무영](https://github.com/wkdan) : 회원 관리
+[신동훈](https://github.com/SDHSeoulTech) : 사용자 리뷰
+[신윤호](https://github.com/messiteacher) : 상품 관리
+
 
 ## 🔍 핵심 비즈니스 로직
 
